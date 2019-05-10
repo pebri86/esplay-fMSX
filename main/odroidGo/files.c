@@ -30,11 +30,13 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
-#include "odroid_display.h"
+#include "display.h"
+#include "DisplayMSX.h"
 #include <stdarg.h>
 
 char* buffer;
 char* fullCurrentDir;
+extern const char *ProgDir;
 
 struct dirent dirInfo;
 struct dirent firstDirEntry;
@@ -104,8 +106,7 @@ int initFiles(){
    
     if (!fullCurrentDir){ printf("malloc fullCurrentDir failed!\n"); return 0; }
     
-    strncpy(fullCurrentDir, FMSX_ROOT_GAMESDIR, 612);
-    
+    strncpy(fullCurrentDir, FMSX_ROOT_GAMESDIR, 612); 
 }
 
 int chdir(const char *path)

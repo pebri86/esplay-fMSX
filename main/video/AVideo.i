@@ -37,7 +37,8 @@
 //#include <stdlib.h>
 //#include <string.h>
 
-#include "odroid_display.h"
+#include "display.h"
+#include "DisplayMSX.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
@@ -47,7 +48,7 @@
     #define BPP16
 #endif
 
-#include "ImageMux.h"
+#include "../EMULib/ImageMux.h"
 #include "MSX.h"
 #include "EMULib.h"
 
@@ -219,21 +220,21 @@ void videoTask(void* arg)
     
     if (VideoTaskCommand == 1 || lastBGColor != XPal[BGColor]) {// clear screen first
        if (! showKeyboard) 
-         ili9341_write_frame_msx(0,0,WIDTH_OVERLAY,HEIGHT_OVERLAY, NULL, XPal[BGColor], palette);
+         display_write_frame_msx(0,0,WIDTH_OVERLAY,HEIGHT_OVERLAY, NULL, XPal[BGColor], palette);
        else
-         ili9341_write_frame_msx(0,0,WIDTH_OVERLAY,HEIGHT_OVERLAY/2, NULL, XPal[BGColor], palette);
+         display_write_frame_msx(0,0,WIDTH_OVERLAY,HEIGHT_OVERLAY/2, NULL, XPal[BGColor], palette);
        
        lastBGColor = XPal[BGColor];
      }
      VideoTaskCommand = 0;
   
      if (! showKeyboard) {
-          ili9341_write_frame_msx(MSX_DISPLAY_X, MSX_DISPLAY_Y  ,WIDTH,HEIGHT, msxFramebuffer, XPal[BGColor], palette);
+          display_write_frame_msx(MSX_DISPLAY_X, MSX_DISPLAY_Y  ,WIDTH,HEIGHT, msxFramebuffer, XPal[BGColor], palette);
      } else {
          if (! flipScreen)
-           ili9341_write_frame_msx(MSX_DISPLAY_X, MSX_DISPLAY_Y  ,WIDTH,HEIGHT/2, msxFramebuffer, XPal[BGColor], palette);
+           display_write_frame_msx(MSX_DISPLAY_X, MSX_DISPLAY_Y  ,WIDTH,HEIGHT/2, msxFramebuffer, XPal[BGColor], palette);
         else
-           ili9341_write_frame_msx(MSX_DISPLAY_X, MSX_DISPLAY_Y  ,WIDTH,HEIGHT/2, msxFramebuffer + WIDTH*(HEIGHT/2), XPal[BGColor], palette);
+           display_write_frame_msx(MSX_DISPLAY_X, MSX_DISPLAY_Y  ,WIDTH,HEIGHT/2, msxFramebuffer + WIDTH*(HEIGHT/2), XPal[BGColor], palette);
      }
       
     if (showKeyboard && (reDrawKeyboard || reDrawCursor)) {
@@ -262,7 +263,7 @@ void videoTask(void* arg)
         if (cursorHeight + cursorY > keyboard_image.height) cursorHeight = keyboard_image.height - cursorY;
         // recover background
         if (backGroundX != -1){
-            ili9341_write_frame_rectangleLE(backGroundX, HEIGHT_OVERLAY/2 + backGroundY, backGroundWidth, backGroundHeight, (uint16_t*)cursorBackGround);
+            write_frame_rectangleLE(backGroundX, HEIGHT_OVERLAY/2 + backGroundY, backGroundWidth, backGroundHeight, (uint16_t*)cursorBackGround);
         }
         // copy backgroud in cursor and background
         cp = cursor;
@@ -289,8 +290,8 @@ void videoTask(void* arg)
             }
         }
         // TODO: the same in my keyboard image. the first row is crap, so i down't draw it. have to find out why GIMP's first line is crap...
-        if (reDrawKeyboard) ili9341_write_frame_rectangleLE(0, HEIGHT_OVERLAY/2, keyboard_image.width, keyboard_image.height - 1, (uint16_t*)(keyboard_image.pixel_data + keyboard_image.width*2));
-        ili9341_write_frame_rectangleLE(cursorX, HEIGHT_OVERLAY/2 + cursorY, cursorWidth, cursorHeight, (uint16_t*)cursor);
+        if (reDrawKeyboard) write_frame_rectangleLE(0, HEIGHT_OVERLAY/2, keyboard_image.width, keyboard_image.height - 1, (uint16_t*)(keyboard_image.pixel_data + keyboard_image.width*2));
+        write_frame_rectangleLE(cursorX, HEIGHT_OVERLAY/2 + cursorY, cursorWidth, cursorHeight, (uint16_t*)cursor);
         reDrawKeyboard = 0;
         reDrawCursor = 0;
     }
@@ -363,7 +364,7 @@ int InitVideo(void) {
       XPal[15] = Black;
     
      // clear screen
-    ili9341_write_frame_msx(0,0,WIDTH_OVERLAY,HEIGHT_OVERLAY, NULL, XPal[BGColor], XPal);
+    display_write_frame_msx(0,0,WIDTH_OVERLAY,HEIGHT_OVERLAY, NULL, XPal[BGColor], XPal);
     
     
     xTaskCreatePinnedToCore(&videoTask, "videoTask", 2048, NULL, 5, NULL, 1);
@@ -1331,11 +1332,11 @@ void hideVirtualKeyboard() {
 /*************************************************************/
 int ShowVideo(void) {
    
-    ili9341_write_frame_rectangleLE(0,0,WIDTH_OVERLAY,HEIGHT_OVERLAY, overlay.Data);
+    write_frame_rectangleLE(0,0,WIDTH_OVERLAY,HEIGHT_OVERLAY, overlay.Data);
     return 0;
 }
 
 int DrawuGui(uint16_t* uGuiMenu, int y) {
-    ili9341_write_frame_rectangleLE(0,y,WIDTH_OVERLAY,HEIGHT_OVERLAY - y, uGuiMenu);
+    write_frame_rectangleLE(0,y,WIDTH_OVERLAY,HEIGHT_OVERLAY - y, uGuiMenu);
     return 0;
 }

@@ -32,10 +32,10 @@
 #ifndef LIBODROIDGO_H
 #define LIBODROIDGO_H
 
-#define FMSX_CONFIG_FILE "/sd/odroid/data/msx/config.ini"
+#define FMSX_CONFIG_FILE "/sd/esplay/data/msx/config.ini"
 #define FMSX_ROOT_GAMESDIR "/sd/roms/msx"
-#define FMSX_ROOT_DATADIR "/sd/odroid/data/msx"
-#define FMSX_MP_ROM_DATA "/sd/odroid/data/msx/mprom.rom"
+#define FMSX_ROOT_DATADIR "/sd/esplay/data/msx"
+#define FMSX_MP_ROM_DATA "/sd/esplay/data/msx/mprom.rom"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -91,11 +91,11 @@ int odroidFmsxGUI_getKey();
 #define SND_BUFSIZE     (1<<SND_BITS)
 
 #ifndef STOP_DISPLAY_FUNCTION
-    #define STOP_DISPLAY_FUNCTION odroid_display_stop_msx_display
+    #define STOP_DISPLAY_FUNCTION stop_msx_display
 #endif
 
 #ifndef RESUME_DISPLAY_FUNCTION
-    #define RESUME_DISPLAY_FUNCTION odroid_display_resume_msx_display
+    #define RESUME_DISPLAY_FUNCTION resume_msx_display
 #endif
 
 

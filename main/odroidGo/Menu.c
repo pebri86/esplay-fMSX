@@ -28,7 +28,7 @@
 #include <unistd.h>
 #include "LibOdroidGo.h"
 #include "ugui.h"
-#include "odroid_input.h"
+#include "gamepad.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <string.h>
@@ -37,8 +37,8 @@
 #include "MSX.h"
 #include "EMULib.h"
 #include "esp_system.h"
-#include "odroid_settings.h"
-#include "minini.h"
+#include "settings.h"
+#include "minIni.h"
 
 #define MAX_OBJECTS 6
 
@@ -142,7 +142,7 @@ void odroidFmsxGUI_initMenu() {
    UG_WindowCreate ( &window , obj_buff_wnd_1 , MAX_OBJECTS, window_callback);
    UG_WindowResize(&window, 10, 10, 310, 220);
    UG_WindowSetTitleTextFont ( &window , &FONT_8X8 ) ;
-   UG_WindowSetTitleText ( &window , "ODROID-GO fMSX" ) ;
+   UG_WindowSetTitleText ( &window , "ESPLAY fMSX" ) ;
    UG_WindowSetBackColor( &window , C_GRAY );
    UG_TextboxCreate(&window, &menuTextBox, MENU_TEXTBOX_ID, 10, 10, 290, 160); 
    UG_TextboxSetAlignment(&window, MENU_TEXTBOX_ID, ALIGN_TOP_LEFT);
@@ -159,10 +159,10 @@ void odroidFmsxGUI_initMenu() {
 }
 
 int odroidFmsxGUI_getKey() {
-    odroid_gamepad_state out_state;
-    odroid_input_gamepad_read(&out_state);
+    input_gamepad_state out_state;
+    gamepad_read(&out_state);
     keyPressed = false;
-    for (int i = 0; i < ODROID_INPUT_MAX; i++) if (out_state.values[i]) keyPressed = true;
+    for (int i = 0; i < GAMEPAD_INPUT_MAX; i++) if (out_state.values[i]) keyPressed = true;
     if (keyPressed && lastPressedKey != -1){
         holdDownCounter++;
         if (holdDownCounter > 200) return lastPressedKey;
@@ -171,13 +171,13 @@ int odroidFmsxGUI_getKey() {
     holdDownCounter = 0;
     
     if (!keyPressed) lastPressedKey = -1; else {
-        if (out_state.values[ODROID_INPUT_UP]) lastPressedKey = ODROID_INPUT_UP;
-        if (out_state.values[ODROID_INPUT_DOWN]) lastPressedKey = ODROID_INPUT_DOWN;
-        if (out_state.values[ODROID_INPUT_LEFT]) lastPressedKey = ODROID_INPUT_LEFT;
-        if (out_state.values[ODROID_INPUT_RIGHT]) lastPressedKey = ODROID_INPUT_RIGHT;
-        if (out_state.values[ODROID_INPUT_A]) lastPressedKey = ODROID_INPUT_A;
-        if (out_state.values[ODROID_INPUT_B]) lastPressedKey = ODROID_INPUT_B;
-        if (out_state.values[ODROID_INPUT_MENU]) lastPressedKey = ODROID_INPUT_MENU;
+        if (out_state.values[GAMEPAD_INPUT_UP]) lastPressedKey = GAMEPAD_INPUT_UP;
+        if (out_state.values[GAMEPAD_INPUT_DOWN]) lastPressedKey = GAMEPAD_INPUT_DOWN;
+        if (out_state.values[GAMEPAD_INPUT_LEFT]) lastPressedKey = GAMEPAD_INPUT_LEFT;
+        if (out_state.values[GAMEPAD_INPUT_RIGHT]) lastPressedKey = GAMEPAD_INPUT_RIGHT;
+        if (out_state.values[GAMEPAD_INPUT_A]) lastPressedKey = GAMEPAD_INPUT_A;
+        if (out_state.values[GAMEPAD_INPUT_B]) lastPressedKey = GAMEPAD_INPUT_B;
+        if (out_state.values[GAMEPAD_INPUT_MENU]) lastPressedKey = GAMEPAD_INPUT_MENU;
     }
     return lastPressedKey;
 }
@@ -309,10 +309,10 @@ const char* odroidFmsxGUI_chooseFile(const char *Ext) {
          DrawuGui(pixelBuffer, 0);
          keyNumPressed = odroidFmsxGUI_getKey_block();
          
-         if (keyNumPressed == ODROID_INPUT_RIGHT) selPosition+= FILES_MAX_ROWS;
-         if (keyNumPressed == ODROID_INPUT_LEFT)  selPosition-= FILES_MAX_ROWS;
-         if (keyNumPressed == ODROID_INPUT_DOWN)  selPosition++;
-         if (keyNumPressed == ODROID_INPUT_UP)    selPosition--;
+         if (keyNumPressed == GAMEPAD_INPUT_RIGHT) selPosition+= FILES_MAX_ROWS;
+         if (keyNumPressed == GAMEPAD_INPUT_LEFT)  selPosition-= FILES_MAX_ROWS;
+         if (keyNumPressed == GAMEPAD_INPUT_DOWN)  selPosition++;
+         if (keyNumPressed == GAMEPAD_INPUT_UP)    selPosition--;
          
          
          if (selPosition < 0) {
@@ -340,7 +340,7 @@ const char* odroidFmsxGUI_chooseFile(const char *Ext) {
              selPosition = position + FILES_MAX_ROWS - 1; 
              switchedPage = true;
          }
-         if (selPosition - position >= 0 && selPosition - position < FILES_MAX_ROWS && keyNumPressed == ODROID_INPUT_A && isDir[selPosition - position]) {
+         if (selPosition - position >= 0 && selPosition - position < FILES_MAX_ROWS && keyNumPressed == GAMEPAD_INPUT_A && isDir[selPosition - position]) {
             free(txtFiles);
             free(Buf);
             UG_TextboxDelete(&fileWindow, FILES_TEXTBOX_ID);
@@ -351,7 +351,7 @@ const char* odroidFmsxGUI_chooseFile(const char *Ext) {
             closedir(D);
             return odroidFmsxGUI_chooseFile(Ext);
          }
-        if(keyNumPressed == ODROID_INPUT_B) {
+        if(keyNumPressed == GAMEPAD_INPUT_B) {
             free(txtFiles);
             free(Buf);
             UG_TextboxDelete(&fileWindow, FILES_TEXTBOX_ID);
@@ -365,12 +365,12 @@ const char* odroidFmsxGUI_chooseFile(const char *Ext) {
         }
          
 
-        } while(keyNumPressed != ODROID_INPUT_A && keyNumPressed != ODROID_INPUT_MENU);
+        } while(keyNumPressed != GAMEPAD_INPUT_A && keyNumPressed != GAMEPAD_INPUT_MENU);
         
         
         closedir(D);
     }
-   if(keyNumPressed == ODROID_INPUT_A) {
+   if(keyNumPressed == GAMEPAD_INPUT_A) {
        strncpy(selectedFile, shownFiles[selPosition - position], FILES_MAX_LENGTH_NAME);
    }
    
@@ -380,7 +380,7 @@ const char* odroidFmsxGUI_chooseFile(const char *Ext) {
    UG_TextboxDelete(&fileWindow, FILES_TEXTBOX_ID);
    UG_WindowDelete(&fileWindow);
    
-   if(keyNumPressed == ODROID_INPUT_A) {
+   if(keyNumPressed == GAMEPAD_INPUT_A) {
             return selectedFile;
    }
    return NULL;
@@ -479,7 +479,7 @@ MENU_ACTION odroidFmsxGUI_showMenu() {
    int keyPressed;
    do {
        keyPressed = odroidFmsxGUI_getKey();
-   }while (keyPressed == ODROID_INPUT_MENU);
+   }while (keyPressed == GAMEPAD_INPUT_MENU);
    
    
    /// now listen for another button
@@ -492,8 +492,8 @@ MENU_ACTION odroidFmsxGUI_showMenu() {
        DrawuGui(pixelBuffer, 0);
        
        keyPressed = odroidFmsxGUI_getKey_block();
-       if (keyPressed == ODROID_INPUT_DOWN) c = 1;
-       if (keyPressed == ODROID_INPUT_UP) c = -1;
+       if (keyPressed == GAMEPAD_INPUT_DOWN) c = 1;
+       if (keyPressed == GAMEPAD_INPUT_UP) c = -1;
        
        currentSelectedItem += c;
        
@@ -508,7 +508,7 @@ MENU_ACTION odroidFmsxGUI_showMenu() {
            odroidFmsxGUI_selectMenuItem(currentSelectedItem);
        }
        
-       if (keyPressed == ODROID_INPUT_A) {
+       if (keyPressed == GAMEPAD_INPUT_A) {
            const char* lastSelectedFile = NULL;
            switch(currentSelectedItem){
                ///////////// Load File ///////////////////
@@ -541,7 +541,7 @@ MENU_ACTION odroidFmsxGUI_showMenu() {
                case 3:
                    for(int J=0;J<MAXSLOTS;++J) LoadCart(0,J,0);
                    ini_puts("FMSX", "LASTGAME", "", FMSX_CONFIG_FILE);
-                   LoadKeyMapping("/sd/odroid/data/msx/config.ini");
+                   LoadKeyMapping("/sd/esplay/data/msx/config.ini");
                    stopMenu = true;
                    break;
                case 4:
@@ -574,8 +574,8 @@ MENU_ACTION odroidFmsxGUI_showMenu() {
                    lastSelectedFile = odroidFmsxGUI_chooseFile(".rom\0.mx1\0.mx2\0.dsk\0\0"); 
                    if (lastSelectedFile != NULL) {
                        getFullPath(lastOpenedFileFullPath, lastSelectedFile, 1024);
-                       odroid_settings_RomFilePath_set(lastOpenedFileFullPath);
-                       odroid_settings_WLAN_set(ODROID_WLAN_AP);
+                       set_rom_name_settings(lastOpenedFileFullPath);
+                       esplay_settings_WLAN_set(ESPLAY_WLAN_AP);
                        fflush(stdout);
                        esp_restart();
                    }
@@ -584,7 +584,7 @@ MENU_ACTION odroidFmsxGUI_showMenu() {
                    break;
                case 12:
                    odroidFmsxGUI_msgBox("Multiplayer", " Please wait...", 0);
-                   odroid_settings_WLAN_set(ODROID_WLAN_STA);
+                   esplay_settings_WLAN_set(ESPLAY_WLAN_STA);
                    fflush(stdout);
                    esp_restart();
                    stopMenu = true;
@@ -595,11 +595,11 @@ MENU_ACTION odroidFmsxGUI_showMenu() {
 #else                   
                case 12:
 #endif
-                   odroidFmsxGUI_msgBox("About", " \nfMSX\n\n by Marat Fayzullin\n\n ported by Jan P. Schuemann\n\nThanks to the ODROID-GO community\n\nHave fun!\n ", 1);
+                   odroidFmsxGUI_msgBox("About", " \nfMSX\n\n by Marat Fayzullin\n\n ported by Jan P. Schuemann\n\n modified by Fuji Pebri\n\nHave fun!\n ", 1);
                break;
            };
        }
-       if (keyPressed == ODROID_INPUT_MENU) stopMenu = true;
+       if (keyPressed == GAMEPAD_INPUT_MENU) stopMenu = true;
        
        
    }while (!stopMenu);
@@ -621,11 +621,11 @@ MENU_ACTION odroidFmsxGUI_showMenu() {
 unsigned int WaitKeyOrMouse(void) {
    int key = odroidFmsxGUI_getKey_block();
    switch(key) {
-       case ODROID_INPUT_RIGHT: return CON_RIGHT;
-       case ODROID_INPUT_LEFT: return CON_LEFT;
-       case ODROID_INPUT_UP: return CON_UP;
-       case ODROID_INPUT_DOWN: return CON_DOWN;
-       case ODROID_INPUT_A: return CON_OK;
+       case GAMEPAD_INPUT_RIGHT: return CON_RIGHT;
+       case GAMEPAD_INPUT_LEFT: return CON_LEFT;
+       case GAMEPAD_INPUT_UP: return CON_UP;
+       case GAMEPAD_INPUT_DOWN: return CON_DOWN;
+       case GAMEPAD_INPUT_A: return CON_OK;
        default: return 0;
    }
 }

@@ -33,12 +33,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "odroid_display.h"
-#include "odroid_input.h"
+#include "display.h"
+#include "gamepad.h"
 #include "odroid_qwerty.h"
 #include <esp_heap_caps.h>
-#include "sound.h"
-#include "odroid_audio.h"
+#include "Sound.h"
+#include "audio.h"
 #include "ff.h"
 
 #include "minIni.h"
@@ -50,8 +50,8 @@
 #include "utils.h"
 
 
-int keyMapping[ODROID_INPUT_MAX];
-char pushedKeys[ODROID_INPUT_MAX];
+int keyMapping[GAMEPAD_INPUT_MAX];
+char pushedKeys[GAMEPAD_INPUT_MAX];
 char* lastGame;
 int pushedVirtKeyboardKey = -1;
 int holdVirtKeyboardKey = -1;
@@ -59,7 +59,7 @@ int holdVirtKeyboardSelectKey = -1;
 uint8_t inMenue = 0;
 uint8_t vKeyboardShow = 0;
 /// for the Menu
-unsigned int lastKey = ODROID_INPUT_MENU;
+unsigned int lastKey = GAMEPAD_INPUT_MENU;
 unsigned int pressCounter = 0;
 ///////////
 bool odroidQwertyFound = false;
@@ -67,16 +67,16 @@ odroid_qwerty_state odroidQwertyPushedKeys;
 char holdShift = 0;
 
 void setDefaultKeymapping() {
-    keyMapping[ODROID_INPUT_UP] = JST_UP;
-    keyMapping[ODROID_INPUT_RIGHT] = JST_RIGHT;
-    keyMapping[ODROID_INPUT_DOWN] = JST_DOWN;
-    keyMapping[ODROID_INPUT_LEFT] = JST_LEFT;
-    keyMapping[ODROID_INPUT_SELECT] = '2' << 8;
-    keyMapping[ODROID_INPUT_START] = '1' << 8;
-    keyMapping[ODROID_INPUT_A] = JST_FIREA;
-    keyMapping[ODROID_INPUT_B] = JST_FIREB;
-    keyMapping[ODROID_INPUT_MENU] = '|' << 8;
-    keyMapping[ODROID_INPUT_VOLUME] = '~' << 8;
+    keyMapping[GAMEPAD_INPUT_UP] = JST_UP;
+    keyMapping[GAMEPAD_INPUT_RIGHT] = JST_RIGHT;
+    keyMapping[GAMEPAD_INPUT_DOWN] = JST_DOWN;
+    keyMapping[GAMEPAD_INPUT_LEFT] = JST_LEFT;
+    keyMapping[GAMEPAD_INPUT_SELECT] = '2' << 8;
+    keyMapping[GAMEPAD_INPUT_START] = '1' << 8;
+    keyMapping[GAMEPAD_INPUT_A] = JST_FIREA;
+    keyMapping[GAMEPAD_INPUT_B] = JST_FIREB;
+    keyMapping[GAMEPAD_INPUT_MENU] = '|' << 8;
+    //keyMapping[GAMEPAD_INPUT_VOLUME] = '~' << 8;
     
 }
 
@@ -140,28 +140,28 @@ char LoadKeyMapping(char* KeyFile) {
     int res;
 
     res = ini_gets("KEYMAPPING", "UP", "", buffer, 16, KeyFile);
-    if (res) SetKeyMapping(ODROID_INPUT_UP, buffer);
+    if (res) SetKeyMapping(GAMEPAD_INPUT_UP, buffer);
     
     res = ini_gets("KEYMAPPING", "RIGHT", "", buffer, 16, KeyFile);
-    if (res) SetKeyMapping(ODROID_INPUT_RIGHT, buffer);
+    if (res) SetKeyMapping(GAMEPAD_INPUT_RIGHT, buffer);
     
     res = ini_gets("KEYMAPPING", "DOWN", "", buffer, 16, KeyFile);
-    if (res) SetKeyMapping(ODROID_INPUT_DOWN, buffer);
+    if (res) SetKeyMapping(GAMEPAD_INPUT_DOWN, buffer);
     
     res = ini_gets("KEYMAPPING", "LEFT", "", buffer, 16, KeyFile);
-    if (res) SetKeyMapping(ODROID_INPUT_LEFT, buffer);
+    if (res) SetKeyMapping(GAMEPAD_INPUT_LEFT, buffer);
     
     res = ini_gets("KEYMAPPING", "SELECT", "", buffer, 16, KeyFile);
-    if (res) SetKeyMapping(ODROID_INPUT_SELECT, buffer);
+    if (res) SetKeyMapping(GAMEPAD_INPUT_SELECT, buffer);
     
     res = ini_gets("KEYMAPPING", "START", "", buffer, 16, KeyFile);
-    if (res) SetKeyMapping(ODROID_INPUT_START, buffer);
+    if (res) SetKeyMapping(GAMEPAD_INPUT_START, buffer);
     
     res = ini_gets("KEYMAPPING", "A", "", buffer, 16, KeyFile);
-    if (res) SetKeyMapping(ODROID_INPUT_A, buffer);
+    if (res) SetKeyMapping(GAMEPAD_INPUT_A, buffer);
     
     res = ini_gets("KEYMAPPING", "B", "", buffer, 16, KeyFile);
-    if (res) SetKeyMapping(ODROID_INPUT_B, buffer);
+    if (res) SetKeyMapping(GAMEPAD_INPUT_B, buffer);
     
       
     
@@ -176,7 +176,7 @@ void loadKeyMappingFromGame(const char* gameFileName) {
     char* keyBoardFileFullPath = malloc(612);
     strncpy(keyBoardFile, filename, 256);
     keyBoardFile = cutExtension(keyBoardFile);
-    snprintf(keyBoardFileFullPath, 612, "/sd/odroid/data/msx/%s.ini", keyBoardFile);
+    snprintf(keyBoardFileFullPath, 612, "/sd/esplay/data/msx/%s.ini", keyBoardFile);
     LoadKeyMapping(keyBoardFileFullPath);
     free(keyBoardFile);
     free(keyBoardFileFullPath);
@@ -195,13 +195,13 @@ int InitChangeGame(const char* name) {
 }
 int InitMachine(void){ 
     
-
+    
     
     lastGame = malloc(1024);
-    initFiles();
+    //initFiles();
     
-    setDefaultKeymapping();
-    LoadKeyMapping("/sd/odroid/data/msx/config.ini");
+    //setDefaultKeymapping();
+    //LoadKeyMapping("/sd/esplay/data/msx/config.ini");
   
     InitVideo();
     odroidFmsxGUI_initMenu();
@@ -212,7 +212,7 @@ int InitMachine(void){
         InitChangeGame(lastGame);
     }
     
-    InitSound(AUDIO_SAMPLE_RATE, 0);
+    //InitSound(AUDIO_SAMPLE_RATE, 0);
    
     odroidQwertyFound = odroid_qwerty_init();
     printf("odroid_qwerty_found: %d\n",odroidQwertyFound);
@@ -228,22 +228,22 @@ int InitMachine(void){
 /** Query positions of two joystick connected to ports 0/1. **/
 /** Returns 0.0.B2.A2.R2.L2.D2.U2.0.0.B1.A1.R1.L1.D1.U1.    **/
 /************************************ TO BE WRITTEN BY USER **/
-void checkKey(int key, odroid_gamepad_state out_state) {
+void checkKey(int key, input_gamepad_state out_state) {
     if (keyMapping[key]  > 0xFF) {
         // its a keyboard key
-        if (out_state.values[ODROID_INPUT_START] && ! pushedKeys[ODROID_INPUT_START]){ KBD_SET(keyMapping[ODROID_INPUT_START] >> 8); pushedKeys[ODROID_INPUT_START] = 1;}
-        if (! out_state.values[ODROID_INPUT_START] && pushedKeys[ODROID_INPUT_START]){ KBD_RES(keyMapping[ODROID_INPUT_START] >> 8); pushedKeys[ODROID_INPUT_START] = 0;}
+        if (out_state.values[GAMEPAD_INPUT_START] && ! pushedKeys[GAMEPAD_INPUT_START]){ KBD_SET(keyMapping[GAMEPAD_INPUT_START] >> 8); pushedKeys[GAMEPAD_INPUT_START] = 1;}
+        if (! out_state.values[GAMEPAD_INPUT_START] && pushedKeys[GAMEPAD_INPUT_START]){ KBD_RES(keyMapping[GAMEPAD_INPUT_START] >> 8); pushedKeys[GAMEPAD_INPUT_START] = 0;}
     }
 }
-void keybmoveCursor(odroid_gamepad_state out_state) {
+void keybmoveCursor(input_gamepad_state out_state) {
     
-    if (out_state.values[ODROID_INPUT_UP]) moveCursor(0,-2);
-    if (out_state.values[ODROID_INPUT_DOWN])moveCursor(0,2);
-    if (out_state.values[ODROID_INPUT_LEFT]) moveCursor(-2,0);
-    if (out_state.values[ODROID_INPUT_RIGHT]) moveCursor(2,0);
+    if (out_state.values[GAMEPAD_INPUT_UP]) moveCursor(0,-2);
+    if (out_state.values[GAMEPAD_INPUT_DOWN])moveCursor(0,2);
+    if (out_state.values[GAMEPAD_INPUT_LEFT]) moveCursor(-2,0);
+    if (out_state.values[GAMEPAD_INPUT_RIGHT]) moveCursor(2,0);
    
     
-    if (out_state.values[ODROID_INPUT_A] && pushedVirtKeyboardKey == -1){
+    if (out_state.values[GAMEPAD_INPUT_A] && pushedVirtKeyboardKey == -1){
         int key = mousePress();
         if (key != -1) 
         {
@@ -252,11 +252,11 @@ void keybmoveCursor(odroid_gamepad_state out_state) {
         }
         
     }
-    if (! out_state.values[ODROID_INPUT_A] && pushedVirtKeyboardKey != -1) {
+    if (! out_state.values[GAMEPAD_INPUT_A] && pushedVirtKeyboardKey != -1) {
         KBD_RES(pushedVirtKeyboardKey);
         pushedVirtKeyboardKey = -1;
     }
-    if (out_state.values[ODROID_INPUT_B] && holdVirtKeyboardKey == -1){
+    if (out_state.values[GAMEPAD_INPUT_B] && holdVirtKeyboardKey == -1){
         int key = mousePress();
         if (key != -1) 
         {
@@ -264,15 +264,15 @@ void keybmoveCursor(odroid_gamepad_state out_state) {
             holdVirtKeyboardKey = key; 
         }
     }
-    if (! out_state.values[ODROID_INPUT_B] && holdVirtKeyboardKey != -1){
+    if (! out_state.values[GAMEPAD_INPUT_B] && holdVirtKeyboardKey != -1){
         KBD_RES(holdVirtKeyboardKey);
         holdVirtKeyboardKey = -1;
     }
-    if (out_state.values[ODROID_INPUT_SELECT] && holdVirtKeyboardSelectKey == -1){
+    if (out_state.values[GAMEPAD_INPUT_SELECT] && holdVirtKeyboardSelectKey == -1){
         doFlipScreen();
         holdVirtKeyboardSelectKey = 1;
     }
-    if (! out_state.values[ODROID_INPUT_SELECT]) holdVirtKeyboardSelectKey = -1;
+    if (! out_state.values[GAMEPAD_INPUT_SELECT]) holdVirtKeyboardSelectKey = -1;
      
 }
 // standard ctrl buttons:
@@ -307,15 +307,15 @@ unsigned int Joystick(void) {
     
     
     unsigned int returnState = 0;
-    odroid_gamepad_state out_state;
-    odroid_input_gamepad_read(&out_state);
+    input_gamepad_state out_state;
+    gamepad_read(&out_state);
 #ifdef WITH_WLAN
     if (getMultiplayState() != MULTIPLAYER_CONNECTED_CLIENT) {
 #endif
     bool pressed = false;
-    for (int i = 0; i < ODROID_INPUT_MAX; i++) if (out_state.values[i]) pressed = true;
+    for (int i = 0; i < GAMEPAD_INPUT_MAX; i++) if (out_state.values[i]) pressed = true;
     if (! vKeyboardShow) {
-        if (out_state.values[ODROID_INPUT_A] && out_state.values[ODROID_INPUT_MENU]){
+        if (out_state.values[GAMEPAD_INPUT_A] && out_state.values[GAMEPAD_INPUT_MENU]){
             vKeyboardShow = 2;
             showVirtualKeyboard();
 #ifdef WITH_WLAN            
@@ -324,14 +324,14 @@ unsigned int Joystick(void) {
             return returnState;
         }
     } else if (vKeyboardShow == 1) {
-        if (out_state.values[ODROID_INPUT_MENU]){
+        if (out_state.values[GAMEPAD_INPUT_MENU]){
             vKeyboardShow = 3;
             hideVirtualKeyboard();
             clearScreen();
         }
-    } else if(vKeyboardShow == 2 && !out_state.values[ODROID_INPUT_MENU]) {
+    } else if(vKeyboardShow == 2 && !out_state.values[GAMEPAD_INPUT_MENU]) {
         vKeyboardShow = 1;
-    } else if(vKeyboardShow == 3 && !out_state.values[ODROID_INPUT_MENU]) {
+    } else if(vKeyboardShow == 3 && !out_state.values[GAMEPAD_INPUT_MENU]) {
         vKeyboardShow = 0;
         
     }
@@ -347,8 +347,8 @@ unsigned int Joystick(void) {
     }
 #endif    
     /* joystick mapping */
-    for (int i = 0; i < ODROID_INPUT_MAX; i++){
-        if (i == ODROID_INPUT_MENU || i == ODROID_INPUT_VOLUME) continue;
+    for (int i = 0; i < GAMEPAD_INPUT_MAX; i++){
+        if (i == GAMEPAD_INPUT_MENU /*|| i == GAMEPAD_INPUT_VOLUME*/) continue;
         if (keyMapping[i] <= 0xFF){
             // it is a joystick
             if (out_state.values[i]) returnState |= keyMapping[i];
@@ -387,19 +387,20 @@ unsigned int Joystick(void) {
     }
     
     if (!inMenue){    
-        if (out_state.values[ODROID_INPUT_VOLUME]) {
-            if (! pushedKeys[ODROID_INPUT_VOLUME]) {
+        /*if (out_state.values[GAMEPAD_INPUT_VOLUME]) {
+            if (! pushedKeys[GAMEPAD_INPUT_VOLUME]) {
                 audio_volume_set_change();
-                pushedKeys[ODROID_INPUT_VOLUME] = 1;
+                pushedKeys[GAMEPAD_INPUT_VOLUME] = 1;
             }
-        } else { pushedKeys[ODROID_INPUT_VOLUME] = 0; }
+        } else { pushedKeys[GAMEPAD_INPUT_VOLUME] = 0; }
+        */
 #ifdef WITH_WLAN
     if (getMultiplayState() == MULTIPLAYER_NOT_CONNECTED) {
 #endif        
-        if (out_state.values[ODROID_INPUT_MENU]) {
+        if (out_state.values[GAMEPAD_INPUT_MENU]) {
             // go into menu
             pressCounter = 0;
-            lastKey = ODROID_INPUT_MENU; //the last pressed key for the menu
+            lastKey = GAMEPAD_INPUT_MENU; //the last pressed key for the menu
             inMenue = 1;
             pause_audio();
             clearOverlay();

@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-/* 
+/*
  * File:   main.cpp
  * Author: Schuemi
  *
@@ -39,16 +39,16 @@
 
 #include <stdint.h>
 #include <esp_err.h>
-#include "odroid_sdcard.h"
-#include "odroid_display.h"
-#include "odroid_system.h"
+#include "sdcard.h"
+#include "display.h"
+#include "power.h"
 #include "MSX.h"
 #include "EMULib.h"
 #include "Console.h"
 
 
 #include "esp_system.h"
-#include "odroid_input.h"
+#include "gamepad.h"
 #include "nvs_flash.h"
 
 #include "LibOdroidGo.h"
@@ -56,14 +56,14 @@
 
 #include "esp_event_loop.h"
 
-#include "odroid_settings.h"
+#include "settings.h"
 
 #include "utils.h"
 
 
 
 #ifndef PIXEL
-    #define PIXEL(R,G,B)    (pixel)(((31*(R)/255)<<11)|((63*(G)/255)<<5)|(31*(B)/255))
+#define PIXEL(R,G,B)    (pixel)(((31*(R)/255)<<11)|((63*(G)/255)<<5)|(31*(B)/255))
 #endif
 const char* SD_BASE_PATH = "/sd";
 
@@ -72,54 +72,59 @@ const char* SD_BASE_PATH = "/sd";
 
 
 void app_main(void) {
-     
-   
+
+
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-      ESP_ERROR_CHECK(nvs_flash_erase());
-      ret = nvs_flash_init();
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
-  
 
-   
-   
-   uint8_t initOkay;
-   uint8_t failure = 0;
-   
-   odroid_system_init();
+
+
+
+    uint8_t initOkay;
+    uint8_t failure = 0;
+
+    system_init();
 #ifdef WITH_WLAN
-   ODROID_WLAN_TYPE wlan = odroid_settings_WLAN_get();
-   if (wlan == ODROID_WLAN_AP) server_init();
-   if (wlan == ODROID_WLAN_STA) client_init();
-   
+    ESPLAY_WLAN_TYPE wlan = esplay_settings_WLAN_get();
+    if (wlan == ESPLAY_WLAN_AP) server_init();
+    if (wlan == ESPLAY_WLAN_STA) client_init();
+
 #endif
-   
-   odroid_input_gamepad_init();
-   
-   
-   esp_err_t r = odroid_sdcard_open(SD_BASE_PATH);
+
+    gamepad_init();
+
+
+    esp_err_t r = sdcard_open(SD_BASE_PATH);
     if (r != ESP_OK)
     {
-    //   odroid_display_show_sderr(ODROID_SD_ERR_NOCARD);
+        //   odroid_display_show_sderr(ESPLAY_SD_ERR_NOCARD);
         failure = 1;
-        printf("ODROID_SD_ERR_NOCARD\n");
+        printf("ESPLAY_SD_ERR_NOCARD\n");
     }
 
-   
-    
+    initFiles();
+
+    setDefaultKeymapping();
+    LoadKeyMapping("/sd/esplay/data/msx/config.ini");
+    InitSound(AUDIO_SAMPLE_RATE, 0);
+
     // Display
-   ili9341_prepare();
-   ili9341_init();
-   
-   /// keyboard
-   
+    display_prepare();
+    display_init();
 
-   UPeriod = 50;
+    /// keyboard
 
-   initOkay = InitMachine();
-   
-   if (initOkay) { 
+
+    UPeriod = 50;
+
+    initOkay = InitMachine();
+
+    if (initOkay) {
+        printf("init okay!\n");
         if (! dirExist(FMSX_ROOT_GAMESDIR)) mkdir(FMSX_ROOT_GAMESDIR, 666);
         if (! dirExist(FMSX_ROOT_GAMESDIR"/bios")) mkdir(FMSX_ROOT_GAMESDIR"/bios", 666);
         if (! dirExist(FMSX_ROOT_DATADIR)) mkdir(FMSX_ROOT_DATADIR, 666);
@@ -130,9 +135,9 @@ void app_main(void) {
        
        
 #ifdef WITH_WLAN
-   if (wlan == ODROID_WLAN_AP){ server_wait_for_player(); } 
-   if (wlan == ODROID_WLAN_STA){ client_try_connect();} 
-   if (wlan == ODROID_WLAN_AP || wlan == ODROID_WLAN_STA) {
+   if (wlan == ESPLAY_WLAN_AP){ server_wait_for_player(); } 
+   if (wlan == ESPLAY_WLAN_STA){ client_try_connect();} 
+   if (wlan == ESPLAY_WLAN_AP || wlan == ESPLAY_WLAN_STA) {
        InitChangeGame(getMPFileName());
    }
      

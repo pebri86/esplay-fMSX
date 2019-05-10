@@ -26,7 +26,8 @@
 #include "MSX.h"
 #include "EMULib.h"
 #include <esp_heap_caps.h>
-#include "odroid_audio.h"
+#include "audio.h"
+#include "settings.h"
 #include "LibOdroidGo.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
@@ -49,7 +50,7 @@ unsigned int playLength;
 
 uint16_t toPlayLength = 0;
 QueueHandle_t audioQueue;
-ODROID_AUDIO_SINK sink = ODROID_AUDIO_SINK_NONE;
+//ESPLAY_AUDIO_SINK sink = ESPLAY_AUDIO_SINK_NONE;
 
 int volLevel;
 char stop = 0;
@@ -64,14 +65,14 @@ void audioTask(void* arg)
 #ifndef NO_SOUND
    if (! stop) {
        RenderAndPlayAudio(toPlayLength);
-       odroid_audio_submit(playData, playLength/2);
+       audio_submit(playData, playLength/2);
    }
 #endif
     xQueueReceive(audioQueue, &param, portMAX_DELAY);
   }
 
   printf("audioTask: exiting.\n");
-  odroid_audio_terminate();
+  audio_terminate();
 
   vTaskDelete(NULL);
 
@@ -84,20 +85,17 @@ unsigned int InitAudio(unsigned int Rate,unsigned int Latency) {
     stop = 0;
     char buf[3];
     
-    if (sink == ODROID_AUDIO_SINK_NONE) ini_gets("FMSX", "DAC", "0", buf, 3, FMSX_CONFIG_FILE);
-    
-    if (atoi(buf)) sink = ODROID_AUDIO_SINK_DAC; else sink = ODROID_AUDIO_SINK_SPEAKER;
-    
+    ini_gets("FMSX", "DAC", "0", buf, 3, FMSX_CONFIG_FILE);    
     
     audioQueue = xQueueCreate(1, sizeof(uint16_t*));
     
-    odroid_audio_init(sink, Rate);
-    volLevel = ini_getl("FMSX", "VOLUME", ODROID_VOLUME_LEVEL1, FMSX_CONFIG_FILE);
+    audio_init(Rate);
+    volLevel = ini_getl("FMSX", "VOLUME", ESPLAY_VOLUME_LEVEL1, FMSX_CONFIG_FILE);
     
-    if (volLevel >= ODROID_VOLUME_LEVEL_COUNT || volLevel < ODROID_VOLUME_LEVEL0) volLevel = ODROID_VOLUME_LEVEL1;
-    odroid_audio_volume_set(volLevel);
+    if (volLevel >= ESPLAY_VOLUME_LEVEL_COUNT || volLevel < ESPLAY_VOLUME_LEVEL0) volLevel = ESPLAY_VOLUME_LEVEL1;
+    audio_volume_set(volLevel);
     
-    xTaskCreatePinnedToCore(&audioTask, "audioTask", 2048, NULL, 5, NULL, 1);
+    xTaskCreatePinnedToCore(&audioTask, "audioTask", 4096, NULL, 5, NULL, 1);
     
     return Rate;
 }
@@ -107,8 +105,8 @@ void TrashAudio(void){
 
 void audio_volume_set_change() {
     ets_delay_us(100000); // have to wait a little (other transactions have to finish?)
-    volLevel = (volLevel + 1) % ODROID_VOLUME_LEVEL_COUNT;
-    odroid_audio_volume_set(volLevel);
+    volLevel = (volLevel + 1) % ESPLAY_VOLUME_LEVEL_COUNT;
+    audio_volume_set(volLevel);
     ini_putl("FMSX", "VOLUME", volLevel, FMSX_CONFIG_FILE);
     
 }

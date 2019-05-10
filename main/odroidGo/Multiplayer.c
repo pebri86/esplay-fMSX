@@ -41,7 +41,7 @@
 
 #include "MSX.h"
 
-#include "odroid_settings.h"
+#include "settings.h"
 
 #include <netinet/in.h>
 #include <sys/types.h>
@@ -313,7 +313,7 @@ void client_try_connect()
 {
     
     odroidFmsxGUI_msgBox("Multiplayer", "Try to connect to server...\n\nPress a key to stop trying", 0);
-    odroid_settings_WLAN_set(ODROID_WLAN_NONE);
+    esplay_settings_WLAN_set(ESPLAY_WLAN_NONE);
     int key;
     playFileName[0] = 0;
     if (server_state == MP_NO_CONNECTION) key = waitKeyOrStatusChange();
@@ -367,7 +367,7 @@ void server_wait_for_player()
 {
     server_state = MP_NO_CONNECTION;
     odroidFmsxGUI_msgBox("Multiplayer", "Waiting for player...\n\nPress a key to stop waiting", 0);
-    odroid_settings_WLAN_set(ODROID_WLAN_NONE);
+    esplay_settings_WLAN_set(ESPLAY_WLAN_NONE);
    playFileName[0] = 0;
    
     if (waitKeyOrStatusChange() == -1 && server_state == MP_CLIENT_IS_CONNECTING) {
@@ -401,7 +401,7 @@ void server_wait_for_player()
         to.tv_usec = 0;
         setsockopt(SSocket,SOL_SOCKET,SO_RCVTIMEO,&to,sizeof(to));*/
         
-        char* rom = odroid_settings_RomFilePath_get();
+        char* rom = get_rom_name_settings();
         sendDataBlob(rom, strlen(rom) + 1);
         memcpy(playFileName, rom, strlen(rom) + 1);
         free(rom);
