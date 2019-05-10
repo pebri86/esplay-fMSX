@@ -1,21 +1,17 @@
-# fMSX-go
-fMSX Port to ODROID-GO
-
-to build it, please download fMSX from here: https://fms.komkon.org/fMSX/
-
-But there is also a precompiled Firmware file here: https://github.com/Schuemi/fMSX-go/releases
+# ESPlay-fMSX
+ESPlay-fMSX is fMSX emulator ported to [esplay-hardware]. Originally fMSX ported to Odroid Go by [Schuemi] named [fMSX-go].
 
 Please create these directories on your SD Card manually:
 ```
 /roms/msx/bios
 /roms/msx/games
-/odroid/data/msx
+/esplay/data/msx
 ```
 and put the BIOS files in /roms/msx/bios. You need at least the files MSX2.ROM, MSX2EXT.ROM and DISK.ROM.
 
 You can have subfolders in /roms/msx/games. If you have much games, subfolders are recommend. You should not have more than 150 Games in one folder.
 
-In /odroid/data/msx you can save keymapping files if you wish. The default keymapping is:
+In /esplay/data/msx you can save keymapping files if you wish. The default keymapping is:
 ```
 [KEYMAPPING]
 UP = JST_UP
@@ -30,9 +26,9 @@ B = JST_FIREB
 The possible Key Mappings are:
 JST_UP, JST_RIGHT, JST_DOWN, JST_LEFT, JST_FIREA, JST_FIREB, KBD_SPACE, KBD_F1, KBD_F2, KBD_F3, KBD_F3, KBD_F4, KBD_F5, KBD_LEFT, KBD_UP, KBD_DOWN, KBD_SHIFT, KBD_CONTROL, KBD_GRAPH, KBD_BS, KBD_TAB, KBD_CAPSLOCK, KBD_SELECT, KBD_HOME, KBD_ENTER, KBD_INSERT, KBD_COUNTRY, KBD_STOP, KBD_NUMPAD0 - KBD_NUMPAD9, KBD_ESCAPE and a single digit or a single letter.
 
-You can use for every game a custom mapping file. Put the file in /odroid/data/msx. It schould have the name [GAME].ini. For example if your gamefiles name is GTA3.rom the keyfilename has to be GTA3.ini.
+You can use for every game a custom mapping file. Put the file in /esplay/data/msx. It should have the name [GAME].ini. For example if your gamefiles name is GTA3.rom the keyfilename has to be GTA3.ini.
 
-Also you can have a default setting. Go into /odroid/data/msx, if you have ever started fMSX there should be a file called "config.ini". In this file you can add your defualt keymapping the same way you would add a key mapping for a game.
+Also you can have a default setting. Go into /esplay/data/msx, if you have ever started fMSX there should be a file called "config.ini". In this file you can add your defualt keymapping the same way you would add a key mapping for a game.
 
 
 
@@ -46,8 +42,6 @@ You can open a virtual keyboard by pressing an hold the "A" button ans then the 
 
 # Multiplayer
 
-Multiplayer is really fun. I tested It a hole night with some friends and a couple of beers ;)
-
 To use multiplayer you need to have exactly the same BIOS files on both devices and the same game file in the same directory. The best way is to simply copy the SD from one device.
 
 One is the server, the other is the client. The server starts a game with "start multiplayer server" in the menu, the other one chooses "multiplayer client". The server selects a ROM or a floppy disk. Both devices will restart and they run now the same game.
@@ -58,7 +52,6 @@ In multiplayer mode there are a few limitations:
 
 - You cannot enter the menu. To start another game or not to play in pairs, please turn off the devices.
 - Only the server can call the virtual keyboard
-- ~~Only the server has sound.~~
 - no save games
 
 Many games work very well, some crack the sound, some run too slowly. The problem is to run both games in exactly the same state. I've tried to get the best out of the hardware, maybe I'll find ways to optimize it, but I think it's going very well already. And it's a lot of fun.
@@ -74,38 +67,11 @@ How does this work?
 - The server tells the client what game they whant to play
 - after starting the game on both devices they send UDP packts with joysick and keyboard data to each other. Both devices have to know what the other is doing in every vblank.
 
+# More Info and Updates 
 
-# Next:
+If you want more information and original port for Odroid Go, please go to original port [fMSX-go] by [Schuemi]
 
-The next things I'm planning are:
-
-- Bugfix, bugfix, bugfix. No new functions the nex releases.
-
-# ODROID QWERTY
-![QWERTY](https://raw.githubusercontent.com/Schuemi/fMSX-go/b665513d9a78db4154b9bda7300a44e97bdeb064/res/IMG_20181016_165658.jpg)
-
-You can use the Odroid QWERTY keyboard now to write some BASIC code ;)
-To press the F1-F5 keys, press Ctrl+1, Ctrl+2 ...
-To lock the shift key press Ctrl + Up. To unlock press up only.
-
-
-# Donations 
-
-Donations are very welcome. I have long wondered if I should add a donate button here or not. But, what the hell, if one or the other beer should come out for my troubles here, I like to drink one to you! Thanks a lot!
-
-One beer donation (3.50€):
-<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HTTLDQT45WAPC" rel="some text">![3.50](https://www.paypalobjects.com/en_GB/i/btn/btn_donate_LG.gif)</a>
-
-Two beer donations (5.00€):
-<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=V32J6VX9Y7QQJ" rel="some text">![5.00](https://www.paypalobjects.com/en_GB/i/btn/btn_donate_LG.gif)</a>
-
-Donate a six-pack of beer. :) (10.00€):
-<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QM4DJECCZTKPY" rel="some text">![10.00](https://www.paypalobjects.com/en_GB/i/btn/btn_donate_LG.gif)</a>
-
-
-
-
-
-Hint:
-If you find any spelling or grammatical mistakes, please tell me. My english could be better. Thank you.
+[esplay-hardware]: https://github.com/pebri86/esplay-hardware
+[fMSX-go]:https://github.com/Schuemi/fMSX-go
+[Schuemi]:https://github.com/Schuemi
 
